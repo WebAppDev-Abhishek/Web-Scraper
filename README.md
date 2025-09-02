@@ -1,5 +1,7 @@
 # 🔎 WebScraper
 
+<img width="1056" height="53" alt="Note" src="https://github.com/user-attachments/assets/bb7ac12b-0f3e-49e1-b7e7-ef88a2ba2bc7" />
+
 A **Node.js + Express + Socket.IO web scraper** that crawls websites (or IP ranges) to extract **emails** and **phone numbers** in real time.  
 It comes with a **frontend dashboard** built with HTML, TailwindCSS, and custom JavaScript to display progress, results, and logs.
 
@@ -14,8 +16,6 @@ WebScraper/
 │   └─ crawler.js         # Core scraper logic
 ├─ public/
 │   ├─ index.html         # Frontend UI
-│   ├─ style.css          # Custom styles
-│   └─ script.js          # Frontend logic (Socket.IO events)
 ├─ package.json
 └─ README.md
 ```
@@ -72,5 +72,8 @@ By default, the server runs on **http://localhost:3000**
 ---
 
 ## 📸 Screenshots
-> Example UI when scraping a website:
+<img width="1159" height="974" alt="screencapture-localhost-3000-2025-09-02-22_31_13" src="https://github.com/user-attachments/assets/c8c5fa00-751d-4c4c-8573-5ff2b75eb9bc" />
+<img width="1159" height="739" alt="screencapture-localhost-3000-2025-09-02-22_34_00" src="https://github.com/user-attachments/assets/4fab427a-03b9-405d-b467-7421f288f809" />
+<img width="1090" height="885" alt="Screenshot 2025-09-02 223439" src="https://github.com/user-attachments/assets/5bd84a12-abdb-44ed-8cc1-711665c98938" />
+
 
