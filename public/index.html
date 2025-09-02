@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Web Contact Scraper — Live</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root { --bg:#0b1020; --card:#121936; --muted:#9aa3b2; --text:#e8eefc; --accent:#6ea8fe; --ok:#3ddc97; --warn:#ffb454; --err:#ff6b6b; }
+    *{box-sizing:border-box}
+    body{margin:0; font-family:Inter, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif; background:linear-gradient(180deg, #0b1020, #0a0f1d); color:var(--text);}
+    .wrap{max-width:980px; margin:40px auto; padding:0 16px}
+    .card{background:var(--card); border:1px solid rgba(255,255,255,.06); border-radius:18px; box-shadow:0 10px 30px rgba(0,0,0,.25)}
+    .header{padding:22px 22px 14px; border-bottom:1px solid rgba(255,255,255,.06)}
+    .title{font-size:22px; font-weight:700; letter-spacing:.2px}
+    .sub{color:var(--muted); font-size:13px; margin-top:6px}
+    .content{padding:18px 22px 22px}
+    .row{display:flex; gap:12px; flex-wrap:wrap}
+    .input, .btn, .num{height:42px; border-radius:12px; border:1px solid rgba(255,255,255,.08); background:#0e1430; color:var(--text); padding:0 14px; outline:none}
+    .input{flex:1; min-width:260px}
+    .num{width:120px}
+    .btn{background:linear-gradient(180deg, #1b2a6b, #0f1c53); cursor:pointer; font-weight:600}
+    .btn:hover{filter:brightness(1.08)}
+    .btn:disabled{opacity:.6; cursor:not-allowed}
+    .hint{font-size:12px; color:var(--muted); margin-top:8px}
+    .results{margin-top:18px}
+    .pill{display:inline-flex; align-items:center; gap:8px; padding:8px 10px; border-radius:999px; background:#0e1536; border:1px solid rgba(255,255,255,.06); font-size:12px; color:var(--muted); margin-right:8px}
+    .grid{display:grid; grid-template-columns:repeat(auto-fit,minmax(260px,1fr)); gap:14px; margin-top:12px}
+    .panel{background:#0d1431; border:1px solid rgba(255,255,255,.06); border-radius:14px; padding:12px}
+    .panel h3{margin:0 0 8px; font-size:14px; letter-spacing:.2px}
+    ul{margin:0; padding-left:18px}
+    li{padding:4px 0}
+    .error{background:#2a0f14; border-color:#5b1d25; color:#ffc9c9; padding:10px 12px; border-radius:10px; margin-top:12px}
+    .small{font-size:12px; color:var(--muted)}
+    .spinner{width:18px; height:18px; border:3px solid rgba(255,255,255,.2); border-top-color:#fff; border-radius:50%; animation:spin 0.8s linear infinite}
+    @keyframes spin{to{transform:rotate(360deg)}}
+    a{color:var(--accent); text-decoration:none}
+    a:hover{text-decoration:underline}
+    .footer{margin-top:16px; text-align:center; color:var(--muted); font-size:12px}
+    .badge{padding:2px 8px; border-radius:999px; font-size:11px; margin-left:6px; border:1px solid rgba(255,255,255,.1)}
+    .row2{display:flex; gap:10px; align-items:center; flex-wrap:wrap; margin-top:10px}
+    code{background:#0b1230; padding:2px 6px; border-radius:6px; font-size:12px}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="card">
+      <div class="header">
+        <div class="title">Web Contact Scraper <span class="badge">Live</span></div>
+        <div class="sub">Enter a website URL. The server will stream results in real time while it crawls internal pages (up to a limit).</div>
+      </div>
+      <div class="content">
+        <form id="scrapeForm">
+          <div class="row">
+            <input class="input" id="urlInput" type="url" placeholder="https://example.com" required />
+            <input class="num" id="maxPages" type="number" min="1" max="50" value="8" title="Max pages to crawl" />
+            <button class="btn" id="goBtn" type="submit">Start</button>
+          </div>
+          <div class="row2 small">
+            <label><input type="checkbox" id="includeTel" checked/> include <code>tel:</code> links</label>
+            <label><input type="checkbox" id="includeMailto" checked/> include <code>mailto:</code> links</label>
+          </div>
+          <div class="hint">Make sure you have permission to crawl the site. This demo stays on the same origin. You can stop by refreshing the page.</div>
+        </form>
+
+        <div id="status" class="hint" style="display:none; margin-top:12px; display:flex; align-items:center; gap:8px;"></div>
+
+        <div class="results" id="results" style="display:none;">
+          <div id="summary"></div>
+          <div class="grid">
+            <div class="panel">
+              <h3>Emails</h3>
+              <ul id="emails"></ul>
+            </div>
+            <div class="panel">
+              <h3>Phone Numbers</h3>
+              <ul id="phones"></ul>
+            </div>
+            <div class="panel" style="grid-column:1/-1;">
+              <h3>Pages Visited</h3>
+              <ul id="pages"></ul>
+            </div>
+          </div>
+        </div>
+
+        <div id="error" class="error" style="display:none;"></div>
+      </div>
+    </div>
+    <div class="footer">Built for demo/educational use — crawl responsibly.</div>
+  </div>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script>
+    const form = document.getElementById('scrapeForm');
+    const urlInput = document.getElementById('urlInput');
+    const maxPagesEl = document.getElementById('maxPages');
+    const includeTelEl = document.getElementById('includeTel');
+    const includeMailtoEl = document.getElementById('includeMailto');
+    const resultsEl = document.getElementById('results');
+    const errorEl = document.getElementById('error');
+    const statusEl = document.getElementById('status');
+    const emailsEl = document.getElementById('emails');
+    const phonesEl = document.getElementById('phones');
+    const pagesEl = document.getElementById('pages');
+    const summaryEl = document.getElementById('summary');
+    const goBtn = document.getElementById('goBtn');
+
+    let socket;
+    const emails = new Set();
+    const phones = new Set();
+    const pages = new Set();
+
+    function normalizeUrl(u){
+      try{
+        if(!/^https?:\/\//i.test(u)) u = 'https://' + u;
+        return new URL(u).href;
+      }catch(e){ return null; }
+    }
+    function pill(label, value){
+      const div = document.createElement('span');
+      div.className = 'pill';
+      div.innerHTML = `<strong>${label}</strong> ${value}`;
+      return div;
+    }
+    function setLoading(loading, msg='Crawling...'){
+      goBtn.disabled = loading;
+      statusEl.style.display = loading ? 'flex' : 'none';
+      statusEl.innerHTML = loading ? `<span class="spinner"></span> ${msg}` : '';
+    }
+    function refreshSummary(target){
+      summaryEl.innerHTML = '';
+      summaryEl.appendChild(pill('Target', target));
+      summaryEl.appendChild(pill('Emails', emails.size));
+      summaryEl.appendChild(pill('Phones', phones.size));
+      summaryEl.appendChild(pill('Pages', pages.size));
+    }
+
+    function mountSocket(){
+      if(socket) socket.disconnect();
+      socket = io({ transports: ['websocket'] });
+
+      socket.on('connect', () => {
+        // console.log('connected', socket.id);
+      });
+
+      socket.on('start', (payload) => {
+        resultsEl.style.display = 'block';
+        setLoading(true);
+        refreshSummary(payload.target);
+      });
+
+      socket.on('page', ({ url, status }) => {
+        if(!pages.has(url)){
+          pages.add(url);
+          const li = document.createElement('li');
+          const a = document.createElement('a');
+          a.href = url; a.textContent = url; a.target = '_blank';
+          li.appendChild(a);
+          if(status && status !== 200){
+            const span = document.createElement('span');
+            span.className='small';
+            span.textContent = `  (${status})`;
+            li.appendChild(span);
+          }
+          pagesEl.appendChild(li);
+          refreshSummary(document.getElementById('currentTarget')?.textContent || '');
+        }
+      });
+
+      socket.on('found', ({ emails: es = [], phones: ps = [] }) => {
+        es.forEach(e => {
+          if(!emails.has(e)){
+            emails.add(e);
+            const li = document.createElement('li');
+            li.textContent = e;
+            emailsEl.appendChild(li);
+          }
+        });
+        ps.forEach(p => {
+          if(!phones.has(p)){
+            phones.add(p);
+            const li = document.createElement('li');
+            li.textContent = p;
+            phonesEl.appendChild(li);
+          }
+        });
+        refreshSummary(document.getElementById('currentTarget')?.textContent || '');
+      });
+
+      socket.on('done', ({ pagesVisited, totalEmails, totalPhones, target }) => {
+        setLoading(false, 'Completed');
+        refreshSummary(target);
+      });
+
+      socket.on('errorMsg', ({ message }) => {
+        errorEl.textContent = message;
+        errorEl.style.display = 'block';
+        setLoading(false);
+      });
+
+      socket.on('disconnect', () => {
+        setLoading(false, 'Disconnected');
+      });
+    }
+
+    mountSocket();
+
+    form.addEventListener('submit', (e) => {
+      e.preventDefault();
+      errorEl.style.display = 'none';
+      resultsEl.style.display = 'none';
+      emails.clear(); phones.clear(); pages.clear();
+      emailsEl.innerHTML = phonesEl.innerHTML = pagesEl.innerHTML = '';
+
+      const raw = urlInput.value.trim();
+      const normalized = normalizeUrl(raw);
+      if(!normalized){
+        errorEl.textContent = 'Please enter a valid URL (e.g., https://example.com)';
+        errorEl.style.display = 'block';
+        return;
+      }
+
+      const maxPages = Math.min(50, Math.max(1, parseInt(maxPagesEl.value || '8', 10)));
+      const includeTel = !!includeTelEl.checked;
+      const includeMailto = !!includeMailtoEl.checked;
+
+      setLoading(true, 'Connecting...');
+      socket.emit('start', { url: normalized, maxPages, includeTel, includeMailto });
+    });
+  </script>
+</body>
+</html>
