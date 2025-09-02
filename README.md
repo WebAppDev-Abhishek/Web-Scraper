@@ -72,8 +72,10 @@ By default, the server runs on **http://localhost:3000**
 ---
 
 ## 📸 Screenshots
-<img width="1159" height="974" alt="screencapture-localhost-3000-2025-09-02-22_31_13" src="https://github.com/user-attachments/assets/c8c5fa00-751d-4c4c-8573-5ff2b75eb9bc" />
-<img width="1159" height="739" alt="screencapture-localhost-3000-2025-09-02-22_34_00" src="https://github.com/user-attachments/assets/4fab427a-03b9-405d-b467-7421f288f809" />
-<img width="1090" height="885" alt="Screenshot 2025-09-02 223439" src="https://github.com/user-attachments/assets/5bd84a12-abdb-44ed-8cc1-711665c98938" />
 
+<img width="1159" height="341" alt="screencapture-localhost-3000-2025-09-02-22_31_13" src="https://github.com/user-attachments/assets/c56f4357-b237-46a8-bd9a-aebce6498414" />
+
+<img width="1159" height="739" alt="screencapture-localhost-3000-2025-09-02-22_34_00" src="https://github.com/user-attachments/assets/5a0be7a4-872d-4781-812e-8cb27d8b4851" />
+
+<img width="1090" height="885" alt="Screenshot 2025-09-02 223439" src="https://github.com/user-attachments/assets/cf6ac302-a10a-46a2-916a-9fe94bd379a8" />
 
